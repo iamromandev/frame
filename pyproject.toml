@@ -1,0 +1,35 @@
+[project]
+name = "frame"
+version = "0.0.1"
+description = "Media Creator"
+authors = [
+    { name = "Roman", email = "iamromandev@gmail.com" },
+]
+readme = "README.md"
+requires-python = "==3.13.5"
+dependencies = [
+    "loguru>=0.7.3",
+    "toml>=0.10.2",
+    "fastapi[all]>=0.121.1",
+    "tortoise-orm[accel,aiomysql]>=0.25.1",
+    "aerich[mysql,toml]>=0.9.2",
+    "redis>=7.0.1",
+    "aiohttp>=3.13.2",
+    "python-slugify>=8.0.4",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.4.0",
+    "ruff>=0.14.4",
+    "mypy>=1.18.2",
+    "ty>=0.0.1a25",
+]
+
+[tool.uv]
+package = false
+
+[tool.aerich]
+tortoise_orm = "src.data.DB_CONFIG"
+location = "./src/data/migration"
+src_folder = "./."

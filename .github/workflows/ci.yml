@@ -1,0 +1,55 @@
+name: check
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches: [ main ]
+
+env:
+  WORK_DIR: src
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show working directory
+        run: |
+          echo "Current working dir:"
+          pwd
+          echo "Contents:"
+          ls -la
+
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up python 3.13.5
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13.5
+
+      - name: Update pip
+        id: update-pip
+        run: pip install --upgrade pip
+
+      - name: Install uv
+        id: install-uv
+        run: pip install uv
+
+      - name: Set up virtual environment with uv
+        id: setup-uv
+        run: uv venv
+
+      - name: Install dependencies
+        id: install-deps
+        run: uv pip install -r ./pyproject.toml
+
+      - name: Install ruff
+        id: install-ruff
+        run: uv tool install ruff
+
+      - name: Run Ruff and list output
+        id: ruff-lint
+        run: uv tool run ruff check ./src --output-format=github

@@ -1,0 +1,99 @@
+services:
+  db:
+    platform: linux/arm64
+    image: mariadb:latest
+    hostname: db-frame
+    container_name: db-frame
+    restart: on-failure
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3303:3306"
+    networks:
+      - db
+    volumes:
+      - db:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      start_period: 10s
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  cache:
+    platform: linux/arm64
+    image: redis:latest
+    hostname: cache-frame
+    container_name: cache-frame
+    restart: on-failure
+    ports:
+      - "6373:6379"
+    networks:
+      - cache
+    volumes:
+      - cache:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      start_period: 10s
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  server:
+    platform: linux/arm64
+    hostname: server-frame
+    container_name: server-frame
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: dockerfile
+      target: local
+      args:
+        ENV: local
+        WORK_DIR: /workdir
+        INSTALL_DIR: /opt/install
+        PW_DIR: /pwdir
+    ports:
+      - "8003:8000"
+    volumes:
+      - .:/workdir
+    networks:
+      - db
+      - cache
+      - server
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    command: >
+      bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+
+
+networks:
+  db:
+    name: db-frame
+    driver: bridge
+  cache:
+    name: cache-frame
+    driver: bridge
+  server:
+    name: server-frame
+    driver: bridge
+  backend:
+    name: backend
+    driver: bridge
+
+volumes:
+  db:
+    name: db-frame
+  cache:
+    name: cache-frame
+
