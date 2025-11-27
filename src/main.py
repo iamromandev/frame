@@ -11,6 +11,7 @@ from src.data import init_db, run_migrations
 
 # routers
 from src.route.health import router as _health_router
+from src.route.story import router as _story_router
 
 
 @asynccontextmanager
@@ -21,7 +22,7 @@ async def lifespan(fa: FastAPI):
 
 
 app = FastAPI(
-    title="Download Application",
+    title="Generative Media Application",
     version=get_app_version(),
     debug=settings.debug,
     lifespan=lifespan
@@ -41,6 +42,7 @@ init_process_time_tracing(app)
 
 routers = [
     _health_router,
+    _story_router,
 ]
 for router in routers:
     app.include_router(router)
